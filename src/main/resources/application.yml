@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: try-kafka-streams
+  kafka:
+    streams:
+      properties:
+        commit:
+          interval:
+            # make it more interactive
+            ms: 5000
+        default:
+          key:
+            # configure for internal use of changelog and repartition topics
+            # needs to match our group-by type
+            serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+          value:
+            # configure for internal use of changelog and repartition topics
+            # needs to match our group-by type
+            serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+      state-dir: state
