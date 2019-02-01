@@ -20,9 +20,9 @@ import org.springframework.kafka.annotation.EnableKafkaStreams;
 @Slf4j
 public class TopologyConfig {
 
-  private static final String TOPIC_WORDS = "words";
-  private static final String TOPIC_UPPER_WORDS = "upper_words";
-  private static final String TOPIC_WORD_COUNTS = "word_counts";
+  public static final String TOPIC_WORDS = "words";
+  public static final String TOPIC_UPPER_WORDS = "upper_words";
+  public static final String TOPIC_WORD_COUNTS = "word_counts";
 
   @Bean
   public NewTopic wordsTopic() {
