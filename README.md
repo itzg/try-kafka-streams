@@ -26,3 +26,11 @@ docker exec -it try-kafka-stream_kafka_1 \
   kafka-console-consumer --bootstrap-server localhost:9092 \
   --topic word_counts --property print.key=true
 ```
+
+## Topics created by this application
+
+- try-kafka-streams-word-counts-changelog
+- try-kafka-streams-words-repartition
+- upper_words 
+- word_counts
+- words

@@ -3,14 +3,18 @@ package me.itzg.trykafkastreams;
 import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.Grouped;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.kstream.ValueMapper;
+import org.apache.kafka.streams.state.KeyValueStore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafkaStreams;
@@ -52,6 +56,9 @@ public class TopologyConfig {
   }
 
   private void processWordCounts(KStream<String, String> words) {
+    final Serde<String> stringSerde = Serdes.String();
+    final Serde<Long> longSerde = Serdes.Long();
+
     final KTable<String, Long> wordCount = words
         .peek((key, value) -> {
           log.info("processing value='{}'", value);
@@ -62,8 +69,15 @@ public class TopologyConfig {
         .peek((key, value) -> {
           log.info("split into value={}", value);
         })
-        .groupBy((key, value) -> value)
-        .count();
+        .groupBy(
+            (key, value) -> value,
+            Grouped.with("words", stringSerde, stringSerde)
+        )
+        .count(
+            Materialized.<String, Long, KeyValueStore<Bytes, byte[]>>as("word-counts")
+            .withKeySerde(stringSerde)
+            .withValueSerde(longSerde)
+        );
 
     wordCount.toStream()
         .peek((key, value) -> {
@@ -71,7 +85,10 @@ public class TopologyConfig {
         })
         // map the count values to a string to make it kafka-console-consumer friendly
         .mapValues(count -> Long.toString(count))
-        .to(TOPIC_WORD_COUNTS);
+        .to(
+            TOPIC_WORD_COUNTS,
+            Produced.with(stringSerde, stringSerde)
+        );
   }
 
   private void processToUpper(KStream<String, String> words) {
