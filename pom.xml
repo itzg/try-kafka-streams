@@ -17,6 +17,13 @@
 
   <properties>
     <java.version>1.8</java.version>
+    <!--
+    On Windows, needed to upgrade past kafka-stream 2.0.1 due to
+    Exception in thread "try-kafka-streams-1efff72c-5522-4c3b-9c76-0ed5f8f7f1b5-StreamThread-1" java.lang.UnsatisfiedLinkError: C:\Users\itzg\AppData\Local\Temp\librocksdbjni1096214264413847802.dll: A dynamic link library (DLL) initialization routine failed
+    NOTE setting this property seems to be all it takes for Spring dependencies to resolve to that
+    vs the default 2.0.1 for streams and client.
+    -->
+    <kafka.version>2.1.0</kafka.version>
   </properties>
 
   <dependencies>
@@ -32,6 +39,7 @@
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka-streams</artifactId>
     </dependency>
+
 
     <dependency>
       <groupId>org.projectlombok</groupId>
