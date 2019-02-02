@@ -44,22 +44,19 @@ public class TopologyConfig {
   }
 
   @Bean
-  public KStream wordsStream(StreamsBuilder streamsBuilder) {
+  public KStream<String,String> wordsStream(StreamsBuilder streamsBuilder) {
     final KStream<String, String> words = streamsBuilder
         .stream(TOPIC_WORDS, Consumed.with(Serdes.String(), Serdes.String()));
 
     processToUpper(words);
 
-    processWordCounts(words);
-
     return words;
   }
 
-  private void processWordCounts(KStream<String, String> words) {
+  @Bean
+  public KTable<String, Long> wordCountTable(KStream<String,String> wordsStream) {
     final Serde<String> stringSerde = Serdes.String();
-    final Serde<Long> longSerde = Serdes.Long();
-
-    final KTable<String, Long> wordCount = words
+    return wordsStream
         .peek((key, value) -> {
           log.info("processing value='{}'", value);
         })
@@ -75,11 +72,16 @@ public class TopologyConfig {
         )
         .count(
             Materialized.<String, Long, KeyValueStore<Bytes, byte[]>>as("word-counts")
-            .withKeySerde(stringSerde)
-            .withValueSerde(longSerde)
+                .withKeySerde(stringSerde)
+                .withValueSerde(Serdes.Long())
         );
+  }
 
-    wordCount.toStream()
+  @Bean
+  public KStream<String, Long> wordCountStream(KTable<String, Long> wordCountTable) {
+    final KStream<String, Long> wordCountStream = wordCountTable.toStream();
+
+    wordCountStream
         .peek((key, value) -> {
           log.info("counted key={} value={}", key, value);
         })
@@ -87,8 +89,10 @@ public class TopologyConfig {
         .mapValues(count -> Long.toString(count))
         .to(
             TOPIC_WORD_COUNTS,
-            Produced.with(stringSerde, stringSerde)
+            Produced.with(Serdes.String(), Serdes.String())
         );
+
+    return wordCountStream;
   }
 
   private void processToUpper(KStream<String, String> words) {
