@@ -27,6 +27,7 @@ public class TopologyConfig {
   public static final String TOPIC_WORDS = "words";
   public static final String TOPIC_UPPER_WORDS = "upper_words";
   public static final String TOPIC_WORD_COUNTS = "word_counts";
+  public static final String STORE_WORD_COUNTS = "word-counts";
 
   @Bean
   public NewTopic wordsTopic() {
@@ -71,7 +72,7 @@ public class TopologyConfig {
             Grouped.with("words", stringSerde, stringSerde)
         )
         .count(
-            Materialized.<String, Long, KeyValueStore<Bytes, byte[]>>as("word-counts")
+            Materialized.<String, Long, KeyValueStore<Bytes, byte[]>>as(STORE_WORD_COUNTS)
                 .withKeySerde(stringSerde)
                 .withValueSerde(Serdes.Long())
         );
